@@ -1,28 +1,116 @@
 from products import Product
 from store import Store
 
-# bose = Product("Bose QuietComfort Earbuds", price=250, quantity=500)
-# mac = Product("MacBook Air M2", price=1450, quantity=100)
 
-# print(bose.buy(50))
-# print(mac.buy(100))
-# print(mac.is_active())
+def start(store_obj: Store):
+    while True:
+        print(
+            "\n       Store Menu"
+            "\n       ----------"
+            "\n1. List all products in store"
+            "\n2. Show total amount in store"
+            "\n3. Make an order"
+            "\n4. Quit"
+        )
 
-# bose.show()
-# mac.show()
+        user_input = input("Please choose a number: ").strip()
 
-# bose.set_quantity(1000)
-# bose.show()
+        if user_input == "1":
+            print("\n                 Available Products\n")
+            active_products = store_obj.get_all_products()
+            for index, product in enumerate(active_products, start=1):
+                print(f"{index}. ", end="")
+                product.show()
+            print("-------------------------------------------------")
 
-product_list = [
-    Product("MacBook Air M2", price=1450, quantity=100),
-    Product("Bose QuietComfort Earbuds", price=250, quantity=500),
-    Product("Google Pixel 7", price=500, quantity=250)
-]
+        elif user_input == "2":
+            total_quantity = store_obj.get_total_quantity()
+            print(f"\nTotal amount of items in store: {total_quantity}")
 
-best_buy = Store(product_list)
-active_products = best_buy.get_all_products()
-print("Total quantity in store:", best_buy.get_total_quantity())
+        elif user_input == "3":
+            print("\n                Making an Order")
+            active_products = store_obj.get_all_products()
+            
+            if not active_products:
+                print("Sorry, no products available right now.")
+                continue
+                
+            shopping_list = []
+            
+            while True:
+                print("\n              Available products:\n")
+                for index, product in enumerate(active_products, start=1):
+                    print(f"{index}. {product.name} Price: {product.price}, Quantity: {product.quantity}")
+                
+                print("\n(Leave field empty and press Enter to finish order)\n")
+                prod_idx_input = input("Which product do you want to buy? (Enter number): ").strip()
+                
+                if prod_idx_input == "":
+                    break
+                    
+                try:
+                    prod_idx = int(prod_idx_input) - 1
+                    if prod_idx < 0 or prod_idx >= len(active_products):
+                        print("Invalid product number. Please select from the list.")
+                        continue
+                        
+                    chosen_product = active_products[prod_idx]
+                    quantity_input = input(f"{chosen_product.name} to buy: ").strip()
+                    
+                    if quantity_input == "":
+                        print("Quantity cannot be empty. Product not added.")
+                        continue
+                        
+                    quantity = int(quantity_input)
+                    
+                    if quantity <= 0:
+                        print("Quantity must be greater than 0.")
+                        continue
+                    if quantity > chosen_product.get_quantity():
+                        print(f"Not enough stock. Only {chosen_product.get_quantity()} available.")
+                        continue
+                        
+                    shopping_list.append((chosen_product, quantity))
+                    print(f"Added to cart: {chosen_product.name} x{quantity}")
+                    
+                except ValueError:
+                    print("Please enter valid numbers.")
+                    continue
+            
+            if shopping_list:
+                try:
+                    total_cost = store_obj.order(shopping_list)
+                    total_items = sum(item[1] for item in shopping_list)
+                    
+                    print(f"\n        Order successful!")
+                    print("-------------------------------------")
+                    for product, quantity in shopping_list:
+                        print(f"{product.name} x {quantity} pcs. x ${product.price}\n"
+                              f"Subtotal: ${quantity * product.price}\n")
+                    print("-------------------------------------")
+                    
+                    print(f"Total amount: {total_items} items")
+                    print(f"Total cost: ${total_cost}")
+                except ValueError as error:
+                    print(f"\nOrder failed: {error}")
 
-order_cost = best_buy.order([(active_products[0], 1), (active_products[1], 2)])
-print(f"Order cost: {order_cost} dollars.")
+            else:
+                print("\n     Order cancelled!\n"
+                "       (empty cart)")
+
+        elif user_input == "4":
+            print("\n   Thank you! Goodbye!\n")
+            break
+        else:
+            print("Invalid choice. Enter a number between 1 and 4")
+
+
+if __name__ == "__main__":
+    product_list = [
+        Product("MacBook Air M2", price=1450, quantity=100),
+        Product("Bose QuietComfort Earbuds", price=250, quantity=500),
+        Product("Google Pixel 7", price=500, quantity=250)
+    ]
+    best_buy = Store(product_list)
+
+    start(best_buy)
